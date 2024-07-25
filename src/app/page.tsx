@@ -1,38 +1,17 @@
-'use client';
+import { TodosList } from "./todos-list";
+import { unstable_noStore } from "next/cache";
+import { getAllTodos } from "./actions";
 
-import { useOptimistic } from 'react';
-import { send } from './actions';
 
-type Message = {
-  message: string;
-};
+export default async function Home() {
+  unstable_noStore();
 
-export default function Thread({ messages }: { messages: Message[] }) {
-  const [optimisticMessages, addOptimisticMessage] = useOptimistic<
-    Message[],
-    string
-  >(messages || [], (state, newMessage) => [...(state || []), { message: newMessage }]);
+  const data = await getAllTodos();
 
-  console.log("Postgres URL:", process.env.POSTGRES_URL);
   return (
     <div className='flex flex-col justify-center items-center p-5'>
-      <div className='w-[20%]'>
-        <form
-          action={async (formData: FormData) => {
-            const message = formData.get('message') as string;
-            addOptimisticMessage(message);
-            await send({title: message});
-          }}
-          className='flex flex-col align-baseline gap-3'
-        >
-          <input type="text" name="message" className='text-black'/>
-          <button type="submit">Send</button>
-        </form>
-        <div>
-          {optimisticMessages.map((m, k) => (
-            <div key={k}>{m.message}</div>
-          ))}
-        </div>
+      <div className='w-[50%]'>
+        <TodosList todos={data} />
       </div>
     </div>
   );
